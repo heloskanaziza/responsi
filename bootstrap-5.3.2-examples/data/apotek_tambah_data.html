@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Pur(e)Health</title>
+    <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .row.py-lg-5 {
+            background-color: #5F9EA0;
+        }
+    </style
+</head>
+
+<body>
+    <header data-bs-theme="dark">
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand"
+                    href="http://localhost/pgweb-responsi/bootstrap-5.3.2-examples/data/home.html">Home</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                    aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                        <li class="nav-item">
+                            <a class="nav-link"
+                                href="http://localhost/pgweb-responsi/bootstrap-5.3.2-examples/data/grafik_tenagakesehatan.html">Grafik</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                                href="http://localhost/pgweb-responsi/bootstrap-5.3.2-examples/data/geoserver/geoserver.html">Peta</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="py-5 text-center container">
+            <div class="row py-lg-5">
+                <div class="col-lg-6 col-md-8 mx-auto">
+                    <h1 class="fw-light bold-text">Form Input Data Informasi Apotek Kabupaten Purworejo</h1>
+                </div>
+            </div>
+        </section>
+
+        <div class="album py-1">
+            <div class="container" </div>
+
+                <form action="apotek_tambah_data.php" onsubmit="return validateForm()" method="post">
+        <label for="nama">Nama:</label><br>
+        <input type="text" id="nama" name="nama" value=""><br>
+
+        <label for="jam_buka">Jam Buka:</label><br>
+        <input type="text" id="jam_buka" name="jam_buka" value=""><br>
+
+        <label for="alamat">Alamat:</label><br>
+        <input type="text" id="alamat" name="alamat" value=""><br>
+
+        <label for="no_telepon">No_Telepon:</label><br>
+        <input type="text" id="no_telepon" name="no_telepon" value=""><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <p id="apotek"></p>
+
+
+    </main>
+
+    
+</body>
+
+</html>

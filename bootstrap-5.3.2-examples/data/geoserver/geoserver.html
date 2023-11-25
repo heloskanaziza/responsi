@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Judul Tab -->
+  <title>Pur(e)Health</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <!-- Search CSS Library -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-search/leaflet-search.css" />
+
+  <!-- Geolocation CSS Library for Plugin -->
+  <link rel="stylesheet"
+    href="https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.css" />
+
+  <!-- Leaflet Mouse Position CSS Library -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-mouseposition/L.Control.MousePosition.css" />
+
+  <!-- Leaflet Measure CSS Library -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-measure/leaflet-measure.css" />
+
+  <!-- EasyPrint CSS Library -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-easyprint/easyPrint.css" />
+
+  <!-- Marker Cluster -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-markercluster/MarkerCluster.css">
+  <link rel="stylesheet" href="assets/plugins/leaflet-markercluster/MarkerCluster.Default.css">
+
+  <!-- Routing -->
+  <link rel="stylesheet" href="assets/plugins/leaflet-routing/leaflet-routing-machine.css" />
+
+
+  <style>
+    /* Background pada Judul */
+    .info {
+      padding: 6px 8px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      background: white;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .info h2 {
+      margin: 0 0 5px;
+      color: #777;
+    }
+
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  
+  <div id="map"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <!-- Search JavaScript Library -->
+  <script src="assets/plugins/leaflet-search/leaflet-search.js"></script>
+
+
+  <!-- Geolocation Javascript Library -->
+  <script
+    src="https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.min.js"></script>
+
+  <!-- Leaflet Mouse Position JavaScript Library -->
+  <script src="assets/plugins/leaflet-mouseposition/L.Control.MousePosition.js"></script>
+
+  <!-- Leaflet Measure JavaScript Library -->
+  <script src="assets/plugins/leaflet-measure/leaflet-measure.js"></script>
+
+  <!-- EasyPrint JavaScript Library -->
+  <script src="assets/plugins/leaflet-easyprint/leaflet.easyPrint.js"></script>
+
+  <!-- Marker Cluster -->
+  <script src="assets/plugins/leaflet-markercluster/leaflet.markercluster.js"></script>
+  <script src="assets/plugins/leaflet-markercluster/leaflet.markercluster-src.js"></script>
+
+  <!--Routing-->
+  <script src="assets/plugins/leaflet-routing/leaflet-routing-machine.js"></script>
+  <script src="assets/plugins/leaflet-routing/leaflet-routing-machine.min.js"></script>
+
+
+  <script>
+
+    var map = L.map('map').setView([-7.7956, 110.3695], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: 'Map data ©️ <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    //var map = L.map('map');
+    const dataJson = fetch("wfsgeoserver.php")
+      .then(response => response.json())
+      .catch(error => console.error("Error fetching JSON: ", error));
+
+    const datasld = fetch("lulc_style.sld")
+      .then(response => response.text())
+      .catch(error => console.error("Error fetching SLD: ", error));
+
+
+    Promise.all([dataJson, datasld]).then(([geojson, sldText]) => {
+      console.log("GeoJSON data:", geojson);
+      console.log("SLD text:", sldText);
+
+      const SLDStyler = new L.SLDStyler(sldText);
+      const geojsonLayer = L.geojson(geojson, {
+        style: SLDStyler.getStyleFunction(),
+        pointToLayer: SLDStyler.getPointToLayerFunction()
+      }).addTo(map);
+
+      map.fitBounds(geojsonLayer.getBounds());
+    });
+
+
+    /* Judul dan Subjudul */
+    var title = new L.Control();
+    title.onAdd = function (map) {
+      this._div = L.DomUtil.create('div', 'info');
+      this.update();
+      return this._div;
+    };
+    title.update = function () {
+      this._div.innerHTML = '<h2>PERSEBARAN FASILITAS KESEHATAN</h2>KABUPATEN PURWOREJO'
+    };
+    title.addTo(map);
+
+
+    /*basemap*/
+    var markers = L.layerGroup();
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        var data = JSON.parse(this.responseText);
+
+        data.forEach(function (row) {
+          var marker = L.marker([row.longitude, row.latitude]).addTo(markers);
+          marker.bindPopup("<strong>" + row.kecamatan);
+        });
+
+        markers.addTo(map); // Add the layer group to the map
+        map.fitBounds(markers.getBounds()); // Fit the map to the bounds of the markers
+      }
+    };
+
+    xmlhttp.open("GET", "index22.php", true); // Replace "get_data.php" with your PHP script that fetches data
+    xmlhttp.send();
+
+    var basemap1 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | <a href="DIVSIGUGM" target="_blank">DIVSIG UGM</a>'
+    });
+
+    var basemap2 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri | <a href="Latihan WebGIS" target="_blank">DIVSIG UGM</a>'
+    });
+
+    var basemap3 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri | <a href="Lathan WebGIS" target="_blank">DIVSIG UGM</a>'
+    });
+
+    var basemap4 = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+    });
+
+    basemap1.addTo(map);
+
+
+    /* Layer Marker */
+    //var marker1 = L.marker([-7.7774, 110.2478], { draggable: true });
+    //marker1.addTo(map);
+    //marker1.bindPopup("Moyudan");
+
+    //var marker2 = L.marker([-7.7318, 110.2484]);
+    //marker2.addTo(map);
+    //marker2.bindPopup("Minggir");
+
+
+    /* Control Layer */
+    var baseMaps = {
+      "OpenStreetMap": basemap1,
+      "Esri World Street": basemap2,
+      "Esri Imagery": basemap3,
+      "Stadia Dark Mode": basemap4
+    };
+
+    var overlayMaps = {
+      //"Moyudan": marker1,
+      //"Minggir": marker2,
+    };
+
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+
+    /* Scale Bar */
+    L.control.scale({
+      maxWidth: 100, position: 'bottomright'
+    }).addTo(map);
+
+
+    /* Image Watermark - Logo*/
+    L.Control.Watermark = L.Control.extend({
+      onAdd: function (map) {
+        var img = L.DomUtil.create('img');
+        img.src = 'assets/img/logo/LOGO_SIG_BLUE.png';
+        img.style.width = '200px';
+        return img;
+      }
+    });
+
+    L.control.watermark = function (opts) {
+      return new L.Control.Watermark(opts);
+    }
+    L.control.watermark({ position: 'bottomleft' }).addTo(map);
+
+
+    /* Image Legend */
+    L.Control.Legend = L.Control.extend({
+      onAdd: function (map) {
+        var img = L.DomUtil.create('img');
+        img.src = 'legenda.png';
+        img.style.width = '250px';
+        return img;
+      }
+    });
+
+    L.control.Legend = function (opts) {
+      return new L.Control.Legend(opts);
+    }
+
+    L.control.Legend({ position: 'bottomleft' }).addTo(map);
+
+
+    /*geoJSON & hubungkan ke .php*/
+    var cek = L.geoJson(null, {
+      pointToLayer: function (feature, latlng) {
+        return L.marker(latlng, {
+          // icon: L.icon({
+          //   iconUrl: "assets/img/marker/fas_rumahsakit_rujukan.png",
+          //   iconSize: [32, 32],
+          //   iconAnchor: [16, 32],
+          //   popupAnchor: [0, -32],
+          //   tooltipAnchor: [16, -20]
+          // })
+        });
+      },
+      onEachFeature: function (feature, layer) {
+        var content = "Kecamatan: " + feature.properties.wadmkc ;
+
+        layer.on({
+          click: function (e) {
+            cek.bindPopup(content).openPopup();
+          },
+          mouseover: function (e) {
+            cek.bindTooltip(feature.properties.kecamatan).openTooltip();
+          },
+          mouseout: function (e) {
+            cek.closePopup();
+            cek.closeTooltip();
+          }
+        });
+      }
+    });
+    $.getJSON("wfsgeoserver.php", function (data) {
+      cek.addData(data);
+      cek.addTo(map);
+      map.fitBounds(cek.getBounds());
+    });
+
+    /*Plugin Geolocation */
+    var locateControl = L.control
+      .locate({
+        position: "topleft",
+        drawCircle: true,
+        follow: true,
+        setView: true,
+        keepCurrentZoomLevel: false,
+        markerStyle: {
+          weight: 1,
+          opacity: 0.8,
+          fillOpacity: 0.8,
+        },
+        circleStyle: {
+          weight: 1,
+          clickable: false,
+        },
+        icon: "fas fa-crosshairs",
+        metric: true,
+        strings: {
+          title: "Click for Your Location",
+          popup: "You're here. Accuracy {distance} {unit}",
+          outsideMapBoundsMsg: "Not available",
+        },
+        locateOptions: {
+          maxZoom: 16,
+          watch: true,
+          enableHighAccuracy: true,
+          maximumAge: 10000,
+          timeout: 10000,
+        },
+      })
+      .addTo(map);
+
+
+    /*Plugin Mouse Position Coordinate */
+    L.control.mousePosition({ position: "bottomright", separator: ",", prefix: "Point Coodinate: " }).addTo(map);
+
+
+    /*Plugin Measurement Tool */
+    var measureControl = new L.Control.Measure({
+      position: "topleft",
+      primaryLengthUnit: "meters",
+      secondaryLengthUnit: "kilometers",
+      primaryAreaUnit: "hectares",
+      secondaryAreaUnit: "sqmeters",
+      activeColor: "#FF0000",
+      completedColor: "#00FF00",
+    });
+    measureControl.addTo(map);
+
+
+    /*Plugin EasyPrint */
+    L.easyPrint({
+      title: "Print",
+    }).addTo(map);
+
+
+    /* Layer Markers */
+    var addressPoints = [
+      [-7.719562218729215, 109.9965399736506, "RSUD dr. Tjitrowardojo Purworejo"],
+      [-7.731909552523815, 110.00132694296303, "RS. Amanah Umat Purworejo"],
+      [-7.714928923477740, 110.01433441226962, "RS. Panti Waluyo Yakkum Purworejo"],
+      [-7.718518830241202, 109.91247527365027, "RS. Palang Biru Kutoarjo"],
+      [-7.727583886146897, 109.96921357889225, "RSU. Purwa Husada"],
+      [-7.717606676533371, 110.00375094661712, "RSIA Kasih Ibu"],
+      [-7.712748277273625, 110.00748611226915, "RSIA Permata"],
+      [-7.709719379475452, 110.00976399374106, "RSU Aisyiyah"],
+      [-7.719940277162079, 109.97330775830558, "RSU Ananda Purworejo"],
+      [-7.682117138112488, 110.03559608898789, "RSU Islam Purworejo"],
+      [-7.725221528788118, 110.02572944296166, "RS. Budi Sehat"],
+      [-7.7201368826391334, 109.9122213429606, "RS. PKU Muhammadiyah Kutoarjo"],
+    
+      [-7.679582977788098, 109.84571572760738, "Klinik Pratama Rawat Inap MENTOSARAN"],
+      [-7.722045329476837, 109.85751095830602, "KRIPMD BHARA MEDIKA"],
+      [-7.711886050097915, 109.935588196924, "Klinik Departemen dan Perusahaan BAGELEN RAHARJA SEHATERA"],
+      [-7.725636726513966, 109.90949168949172, "Klinik Departemen dan Perusahaan PT. KAI"],
+      [-7.681958717372848, 109.8925101969179, "Klinik Pratama Rawat Jalan dan Persalinan QURROTA 'AYUN"],
+      [-7.719626650756283, 110.00131126968556, "Klinik Pratama Rawat Inap PD. GRAHA HUSADA MEDIKA"],
+      [-7.810645442473275, 110.0143586197405, "Klinik Pratama Rawat Inap RISTA MEDIKA"],
+      [-7.689968533106821, 109.98953106831462, "Klinik Pratama Rawat Inap dan Persalinan UMIYAH"],
+
+      [-7.707048413798457, 110.02068183559221, "Klinik Kecantikan Estetika LA BELLE HOUSE OF BEAUTY"],
+      [-7.727308375688576, 109.96863591221428, "Klinik Kecantikan SKIN CARE PURWA HUSADA"],
+      [-7.720134014675154, 109.99782274160023, "Klinik Kecantikan AISYASKIN"],
+      [-7.719806593871249, 110.0052340214225, "Klinik Kecantikan DRW SKINCARE"],
+      [, ""],
+      [, ""],
+      [, ""],
+      [, ""],
+      [, ""],
+      [, ""]
+    ]
+
+    var markersLayer = L.markerClusterGroup();
+
+    for (var i = 0; i < addressPoints.length; i++) {
+      var a = addressPoints[i];
+      var title1 = a[2];
+      var individualMarker = L.marker(L.latLng(a[0], a[1]), {
+        title: title1
+      });
+
+      individualMarker.bindPopup(title1);
+      markersLayer.addLayer(individualMarker);
+    }
+
+    /*Plugin Routing*/
+    var routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(-7.718493254454321, 109.99629123312967),
+        L.latLng(-7.716798591617255, 109.91247274816179)
+      ],
+      routewhileDragging: true
+    });
+    routingControl.addTo(map);
+
+    map.addLayer(markersLayer);
+
+  </script>
+</body>
+
+</html>
